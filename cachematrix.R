@@ -3,42 +3,57 @@
 
 ## this creates a special "matrix" object with a format that can cache its inverse
 
-makeCacheMatrix <- function(x = matrix()) {
-
-        i = NULL
-        set <- function(y){
-                x <<- y  
-                i <<- NULL
-        }
-        get <- function()x
-        setInverse <- function(inv){
-                i <<- inv
-        }
-        getInverse <-function()i
+makeCacheMatrix <- function(x = matrix()){  
         
-        list(set=set, get=get, setInverse=setInverse, getInverse=getInverse)
+        matrix <- NULL #setup a default null matrix
+        
+        set <- function(y){
+                if (nrow(y)!= ncol(y)){ 
+                        stop("matrix is not invertible: Not square matrix")
+                }
+                if (det(y)==0){
+                        stop("matrix is not invertible: determinant = 0")
+                }
+                
+                
+                x <<- y
+                m <<- NULL 
+        } #set function that caches the matrix 
+        
+        get <- function()x
+        #get cached matrix
+        
+        setCacheSolve <- function(cacheMatrix) {
+                m <<- cacheMatrix
+        } #sets the solved cached matrix
+        
+        getCacheSolve <- function() m
+        #gets the solved cached matrix
+        
+        list(set = set, get = get, 
+             setCacheSolve = setCacheSolve,
+             getCacheSolve = getCacheSolve)
+        #this list sets a format for storing all the needed functions/variables 
 }
 
-
-## This function takes the special matrix and solves for its inverse if it doesn't exist and retrieves it if it does.
-
-cacheSolve <- function(x,...) {
-        ## Return a matrix that is the inverse of 'x'
+cacheSolve <- function(x){
         
-        inverse <- x$getInverse()
         
-        if (!is.null(inverse)){
-                message("Getting Cached Data")
-                return(inverse)
+        m <- x$getCacheSolve()
+        #brings up the solved cached matrix
+        
+        if (!is.null(m)){
+                message("Getting cache matrix")
+                return(m)
+                #if matrix is not null, return
         }
         
-        else{
-        ##if no inverse is stored, calculate inverse here
-                data <- x$get()
-                inverse <- solve(data,...)
-                x$setInverse(inverse)
-                inverse
+        data <- data.matrix(x$get())
+        #gets the item from the list, translates this into a numeric matrix format
         
-        }
+        m <- solve(data) #this solves for inverse
         
+        x$setCacheSolve(m) #sets the inverse matrix
+        message("Caching solution, inverse matrix is")
+        m  
 }
